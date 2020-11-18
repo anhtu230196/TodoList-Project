@@ -7,7 +7,7 @@ import { TextField } from '../Components/TextField';
 import { Button } from '../Components/Button';
 import { Table, Th, Thead, Tr } from '../Components/Table';
 import { connect } from 'react-redux';
-import { addTask, changeTheme, deleteTaskAction, doneTaskAction, editTask, updateTask } from '../Redux/Actions/actions/ToDoListActions'
+import { addTask, changeTheme, deleteTaskAction, doneTaskAction, fetchAllTaskList, rejectTaskAction } from '../Redux/Actions/actions/ToDoListActions'
 import { arrTheme } from '../Theme/ThemeManager';
 
 class ToDoList extends Component {
@@ -15,22 +15,23 @@ class ToDoList extends Component {
     constructor(props) {
         super(props);
         this.state = {
+
             taskName: '',
             disabled: true,
         }
     }
 
     renderTaskToDo = () => {
-        return this.props.taskList.filter(task => !task.done).map((task, index) => {
+        return this.props.taskList.filter(task => !task.status).map((task, index) => {
             return <Tr key={index}>
                 <Th>{task.taskName}</Th>
                 <Th className="text-right">
-                    <Button onClick={() => { this.props.dispatch(editTask(task)) }}><i className="fa fa-edit"></i></Button>
+
                     <Button onClick={() => {
-                        this.props.dispatch(doneTaskAction(task.id))
+                        this.props.dispatch(doneTaskAction(task.taskName))
                     }}><i className="fa fa-check"></i></Button>
                     <Button onClick={() => {
-                        this.props.dispatch(deleteTaskAction(task.id))
+                        this.props.dispatch(deleteTaskAction(task.taskName))
                     }}><i className="fa fa-trash"></i></Button>
                 </Th>
             </Tr>
@@ -38,12 +39,15 @@ class ToDoList extends Component {
     }
 
     renderTaskComplete = () => {
-        return this.props.taskList.filter(task => task.done).map((task, index) => {
+        return this.props.taskList.filter(task => task.status).map((task, index) => {
             return <Tr key={index}>
                 <Th>{task.taskName}</Th>
                 <Th className="text-right">
                     <Button onClick={() => {
-                        this.props.dispatch(deleteTaskAction(task.id))
+                        this.props.dispatch(rejectTaskAction(task.taskName))
+                    }}><i class="fa fa-refresh" aria-hidden="true"></i></Button>
+                    <Button onClick={() => {
+                        this.props.dispatch(deleteTaskAction(task.taskName))
                     }}><i className="fa fa-trash"></i></Button>
                 </Th>
             </Tr>
@@ -56,12 +60,12 @@ class ToDoList extends Component {
         })
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        if (prevProps.taskEdit.taskName !== this.props.taskEdit.taskName) {
-            this.setState({
-                taskName: this.props.taskEdit.taskName
-            })
-        }
+
+
+
+
+    componentDidMount() {
+        this.props.dispatch(fetchAllTaskList())
     }
 
     render() {
@@ -85,21 +89,21 @@ class ToDoList extends Component {
                     <Button onClick={() => {
                         //Lấy thông tin người dùng nhập vào
                         let { taskName } = this.state
+                        console.log(taskName)
                         // Tạo ra 1 object
-                        let newTask = {
-                            id: Date.now(),
-                            taskName: taskName,
-                            done: false
+                        if (taskName.trim() === "") {
+                            alert('Please input task name!')
+                        }
+                        else {
+                            this.props.dispatch(addTask(taskName));
                         }
 
                         //dispatch object lên store
-                        this.props.dispatch(addTask(newTask));
+
 
 
                     }} className="ml-2"><i class="fa fa-plus" aria-hidden="true"></i> Add task</Button>
-                    <Button disabled onClick={() => {
-                        this.props.dispatch(updateTask(this.state.taskName))
-                    }} className="ml-2"><i class="fa fa-upload" aria-hidden="true"></i> Update task</Button>
+
                     <hr></hr>
                     <Heading3>Task to do</Heading3>
                     <Table>
@@ -123,7 +127,6 @@ const mapStateToProp = (state) => {
     return {
         theme: state.ToDoListReducer.themeToDoList,
         taskList: state.ToDoListReducer.taskList,
-        taskEdit: state.ToDoListReducer.taskEdit
     }
 }
 

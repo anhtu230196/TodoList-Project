@@ -1,17 +1,27 @@
+import Axios from "axios";
 import {
-  add_task,
   change_theme,
-  delete_task,
   done_task,
   edit_task,
   FETCH_ALL_TASK,
   update_task,
 } from "../TypesAction.js/typesAction";
 
-export const addTask = (newTask) => ({
-  type: add_task,
-  payload: newTask,
-});
+export const addTask = (taskName) => {
+  return (dispatch) => {
+    return Axios({
+      method: "POST",
+      url: "http://svcy.myclass.vn/api/ToDoList/AddTask",
+      data: { taskName: taskName },
+    })
+      .then((res) => {
+        dispatch(fetchAllTaskList());
+      })
+      .catch((err) => {
+        alert(err.response.data);
+      });
+  };
+};
 
 export const changeTheme = (value) => {
   return {
@@ -20,29 +30,59 @@ export const changeTheme = (value) => {
   };
 };
 
-export const doneTaskAction = (taskId) => {
-  return {
-    type: done_task,
-    taskId,
+export const doneTaskAction = (taskName) => {
+  return (dispatch) => {
+    Axios({
+      method: "PUT",
+      url: `http://svcy.myclass.vn/api/ToDoList/doneTask?taskName=${taskName}`,
+    })
+      .then((res) => {
+        dispatch(fetchAllTaskList());
+      })
+      .catch((err) => console.log(err));
   };
 };
 
-export const deleteTaskAction = (taskId) => ({
-  type: delete_task,
-  taskId,
-});
+export const rejectTaskAction = (taskName) => {
+  return (dispatch) => {
+    Axios({
+      method: "PUT",
+      url: `http://svcy.myclass.vn/api/ToDoList/rejectTask?taskName=${taskName}`,
+    })
+      .then((res) => {
+        dispatch(fetchAllTaskList());
+      })
+      .catch((err) => console.log(err));
+  };
+};
 
-export const editTask = (task) => ({
-  type: edit_task,
-  task,
-});
+export const deleteTaskAction = (taskName) => {
+  return (dispatch) => {
+    Axios({
+      method: "DELETE",
+      url: `http://svcy.myclass.vn/api/ToDoList/deleteTask?taskName=${taskName}`,
+    })
+      .then((res) => {
+        dispatch(fetchAllTaskList());
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+};
 
-export const updateTask = (taskName) => ({
-  type: update_task,
-  taskName,
-});
-
-export const fetchAllTaskList = (taskList) => ({
-  type: FETCH_ALL_TASK,
-  payload: taskList,
-});
+export const fetchAllTaskList = () => {
+  return (dispatch) => {
+    return Axios({
+      method: "GET",
+      url: "http://svcy.myclass.vn/api/ToDoList/GetAllTask",
+    })
+      .then((res) => {
+        dispatch({
+          type: FETCH_ALL_TASK,
+          payload: res.data,
+        });
+      })
+      .catch((err) => console.log(err));
+  };
+};
